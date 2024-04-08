@@ -1,0 +1,3 @@
+issues:
+  exclude:
+    - "Error return value of .*(w|rw|(meta|data)Part)\\.(Write(ln)?|Error)|logger.Log.Sync|tx.Rollback. is not checked"
