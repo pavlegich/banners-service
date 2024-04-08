@@ -21,17 +21,27 @@ func NewBannerRepository(ctx context.Context, db *sql.DB) *Repository {
 	}
 }
 
+// GetBannerByFilter gets benner from the storage by the requested filters and returns it.
+func (r *Repository) GetBannerByFilter(ctx context.Context, name string, feature_id int, tag_id int) (*banner.Banner, error) {
+	return nil, nil
+}
+
 // CreateBanner stores new banner into the storage.
-func (r *Repository) CreateBanner(ctx context.Context, banner *banner.Banner) error {
+func (r *Repository) CreateBanner(ctx context.Context, banner *banner.Banner) (int, error) {
+	return -1, nil
+}
+
+// GetBannersByFilter gets and returns the banners by filter from the storage.
+func (r *Repository) GetBannersByFilter(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*banner.Banner, error) {
+	return nil, nil
+}
+
+// UpdateBanner updates requested banner in the storage.
+func (r *Repository) UpdateBanner(ctx context.Context, banner *banner.Banner) error {
 	return nil
 }
 
-// GetAllBanners gets and returns all the banners from the storage.
-func (r *Repository) GetAllBanners(ctx context.Context) ([]*banner.Banner, error) {
-	return nil, nil
-}
-
-// GetBannerByName gets and returns the requested by name banner from the storage.
-func (r *Repository) GetBannerByName(ctx context.Context, name string) (*banner.Banner, error) {
-	return nil, nil
+// DeleteBannerByID deletes the requested by ID banner from the storage.
+func (r *Repository) DeleteBannerByID(ctx context.Context, id int) error {
+	return nil
 }

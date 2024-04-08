@@ -34,6 +34,7 @@ func (c *Controller) BuildRoute(ctx context.Context) (*chi.Mux, error) {
 
 	r.Use(middlewares.WithLogging)
 	r.Use(middlewares.Recovery)
+	r.Use(middlewares.WithAuth)
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {

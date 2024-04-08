@@ -16,17 +16,27 @@ func NewBannerService(ctx context.Context, repo Repository) *BannerService {
 	}
 }
 
-// Create creates new requested banner and requests repository to put it into the storage.
-func (s *BannerService) Create(ctx context.Context, banner *Banner) error {
+// Unload gets banner by filter and returns it.
+func (s *BannerService) Unload(ctx context.Context, feature_id int, tag_id int, actual bool) (*Banner, error) {
+	return nil, nil
+}
+
+// Create creates new banner and puts it into the storage.
+func (s *BannerService) Create(ctx context.Context, banner *Banner) (int, error) {
+	return -1, nil
+}
+
+// List returns list of banners by filter stored in the storage.
+func (s *BannerService) List(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*Banner, error) {
+	return nil, nil
+}
+
+// Update updates the requested banner.
+func (s *BannerService) Update(ctx context.Context, banner *Banner) error {
 	return nil
 }
 
-// List returns list of available banners stored in the database.
-func (s *BannerService) List(ctx context.Context) ([]*Banner, error) {
-	return nil, nil
-}
-
-// Unload gets banner by banner's name and returns it.
-func (s *BannerService) Unload(ctx context.Context, name string) (*Banner, error) {
-	return nil, nil
+// Delete deletes the requested banner by ID from the storage.
+func (s *BannerService) Delete(ctx context.Context, id int) error {
+	return nil
 }

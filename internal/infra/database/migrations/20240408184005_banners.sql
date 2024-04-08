@@ -5,8 +5,8 @@ SELECT 'up SQL query';
 
 CREATE TABLE IF NOT EXISTS banners (
     id serial PRIMARY KEY,
-    tag_ids integer[],
-    feature_id integer,
+    tag_ids integer[] NOT NULL,
+    feature_id integer NOT NULL,
     content jsonb,
     is_active boolean,
     created_at timestamp DEFAULT NOW(),
