@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS banners (
     content jsonb,
     is_active boolean,
     created_at timestamp DEFAULT NOW(),
-    updated_at timestamp
+    updated_at timestamp DEFAULT NOW()
 );
 
 -- create indexes

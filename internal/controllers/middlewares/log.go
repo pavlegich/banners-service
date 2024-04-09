@@ -28,11 +28,13 @@ func WithLogging(h http.Handler) http.Handler {
 		h.ServeHTTP(&lw, r)
 
 		duration := time.Since(start)
+		// role, _ := utils.GetUserRoleFromContext(r.Context())
 
 		logger.Log.Info("incoming HTTP request",
 			zap.String("uri", r.RequestURI),
 			zap.String("method", r.Method),
 			zap.Duration("duration", duration),
+			// zap.String("user_role", role),
 			zap.Int("status", responseData.Status),
 			zap.Int("size", responseData.Size),
 			// zap.String("body", responseData.Body.String()),

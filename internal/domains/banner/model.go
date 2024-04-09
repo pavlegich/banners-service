@@ -34,6 +34,6 @@ type Repository interface {
 	GetBannerByFilter(ctx context.Context, name string, feature_id int, tag_id int) (*Banner, error)
 	CreateBanner(ctx context.Context, banner *Banner) (int, error)
 	GetBannersByFilter(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*Banner, error)
-	UpdateBanner(ctx context.Context, banner *Banner) error
+	UpdateBannerByID(ctx context.Context, banner *Banner) error
 	DeleteBannerByID(ctx context.Context, id int) error
 }

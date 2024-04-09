@@ -25,6 +25,7 @@ func WithAuth(h http.Handler) http.Handler {
 					zap.String("role", role),
 					zap.String("uri", r.RequestURI))
 				w.WriteHeader(http.StatusForbidden)
+				return
 			}
 		default:
 			logger.Log.Error("WithAuth: unknown user role",
