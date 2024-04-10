@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/lib/pq"
 	"github.com/pavlegich/banners-service/internal/domains/banner"
 	errs "github.com/pavlegich/banners-service/internal/errors"
 )
@@ -49,7 +50,49 @@ func (r *Repository) CreateBanner(ctx context.Context, b *banner.Banner) (int, e
 
 // GetBannersByFilter gets and returns the banners by filter from the storage.
 func (r *Repository) GetBannersByFilter(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*banner.Banner, error) {
-	return nil, nil
+	query := "SELECT id, tag_ids, feature_id, content, is_active, created_at, updated_at FROM banners"
+	if feature_id != 0 || tag_id != 0 {
+		query += " WHERE"
+		if feature_id != 0 && tag_id == 0 {
+			query += fmt.Sprintf(" feature_id = %d", feature_id)
+		} else if feature_id == 0 && tag_id != 0 {
+			query += fmt.Sprintf(" %d = ANY (tag_ids)", tag_id)
+		} else {
+			query += fmt.Sprintf(" feature_id = %d AND %d = ANY (tag_ids)", feature_id, tag_id)
+		}
+	}
+
+	if limit != 0 {
+		query += fmt.Sprintf(" LIMIT %d", limit)
+	}
+	query += fmt.Sprintf(" OFFSET %d", offset)
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("GetBannersByFilter: read rows from table failed %w", err)
+	}
+	defer rows.Close()
+
+	bannersList := make([]*banner.Banner, 0)
+	for rows.Next() {
+		var b banner.Banner
+		var tagIDs pq.Int64Array
+		err = rows.Scan(&b.ID, &tagIDs, &b.FeatureID, &b.Content, &b.IsActive, &b.CreatedAt, &b.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("GetBannersByFilter: scan row failed %w", err)
+		}
+		for _, v := range tagIDs {
+			b.TagIDs = append(b.TagIDs, int(v))
+		}
+		bannersList = append(bannersList, &b)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("GetBannersByFilter: rows.Err %w", err)
+	}
+
+	return bannersList, nil
 }
 
 // UpdateBannerByID updates requested banner in the storage.

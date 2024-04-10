@@ -34,7 +34,12 @@ func (s *BannerService) Create(ctx context.Context, banner *Banner) (int, error)
 
 // List returns list of banners by filter stored in the storage.
 func (s *BannerService) List(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*Banner, error) {
-	return nil, nil
+	bannersList, err := s.repo.GetBannersByFilter(ctx, feature_id, tag_id, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("List: get banners list by filter failed %w", err)
+	}
+
+	return bannersList, nil
 }
 
 // Update updates the requested banner.

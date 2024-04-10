@@ -19,6 +19,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/jackc/pgx/v5 v5.5.5
+	github.com/lib/pq v1.10.9
 	github.com/pressly/goose/v3 v3.19.2
 	go.uber.org/automaxprocs v1.5.3
 	go.uber.org/multierr v1.11.0 // indirect

@@ -4,18 +4,20 @@ package banner
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 )
 
 // Banner contains data for banners.
 type Banner struct {
-	ID        int               `json:"id"`
-	TagIDs    []int             `json:"tag_ids"`
-	FeatureID int               `json:"feature_id"`
-	Content   map[string]string `json:"content"`
-	IsActive  bool              `json:"is_active"`
-	CreatedAt time.Time         `json:"created_at"`
-	UpdatedAt time.Time         `json:"updated_at"`
+	ID        int       `json:"banner_id"`
+	TagIDs    []int     `json:"tag_ids"`
+	FeatureID int       `json:"feature_id"`
+	Content   *Content  `json:"content"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // Service describes methods for communication between
@@ -36,4 +38,22 @@ type Repository interface {
 	GetBannersByFilter(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*Banner, error)
 	UpdateBannerByID(ctx context.Context, banner *Banner) error
 	DeleteBannerByID(ctx context.Context, id int) error
+}
+
+// Content type for implementing the Scanner interface.
+type Content map[string]string
+
+// Scan implements Scan method for scanning the banner content from the storage.
+func (c *Content) Scan(v interface{}) error {
+	if v == nil {
+		return nil
+	}
+	switch data := v.(type) {
+	case string:
+		return json.Unmarshal([]byte(data), &c)
+	case []byte:
+		return json.Unmarshal(data, &c)
+	default:
+		return fmt.Errorf("cannot scan type %t into Map", v)
+	}
 }
