@@ -18,8 +18,13 @@ func NewBannerService(ctx context.Context, repo Repository) *BannerService {
 }
 
 // Unload gets banner by filter and returns it.
-func (s *BannerService) Unload(ctx context.Context, feature_id int, tag_id int, actual bool) (*Banner, error) {
-	return nil, nil
+func (s *BannerService) Unload(ctx context.Context, featureID int, tagID int, lastRevision bool) (*Content, error) {
+	bannerContent, err := s.repo.GetBannerContentByFilter(ctx, featureID, tagID)
+	if err != nil {
+		return nil, fmt.Errorf("Unload: get user banner content failed %w", err)
+	}
+
+	return bannerContent, nil
 }
 
 // Create creates new banner and puts it into the storage.
@@ -33,8 +38,8 @@ func (s *BannerService) Create(ctx context.Context, banner *Banner) (int, error)
 }
 
 // List returns list of banners by filter stored in the storage.
-func (s *BannerService) List(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*Banner, error) {
-	bannersList, err := s.repo.GetBannersByFilter(ctx, feature_id, tag_id, limit, offset)
+func (s *BannerService) List(ctx context.Context, featureID int, tagID int, limit int, offset int) ([]*Banner, error) {
+	bannersList, err := s.repo.GetBannersByFilter(ctx, featureID, tagID, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("List: get banners list by filter failed %w", err)
 	}

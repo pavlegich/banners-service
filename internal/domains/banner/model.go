@@ -23,9 +23,9 @@ type Banner struct {
 // Service describes methods for communication between
 // handlers and repositories.
 type Service interface {
-	Unload(ctx context.Context, feature_id int, tag_id int, actual bool) (*Banner, error)
+	Unload(ctx context.Context, featureID int, tagID int, lastRevision bool) (*Content, error)
 	Create(ctx context.Context, banner *Banner) (int, error)
-	List(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*Banner, error)
+	List(ctx context.Context, featureID int, tagID int, limit int, offset int) ([]*Banner, error)
 	Update(ctx context.Context, banner *Banner) error
 	Delete(ctx context.Context, id int) error
 }
@@ -33,9 +33,9 @@ type Service interface {
 // Repository describes methods related with banners
 // for interaction with the storage.
 type Repository interface {
-	GetBannerByFilter(ctx context.Context, name string, feature_id int, tag_id int) (*Banner, error)
+	GetBannerContentByFilter(ctx context.Context, featureID int, tagID int) (*Content, error)
 	CreateBanner(ctx context.Context, banner *Banner) (int, error)
-	GetBannersByFilter(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*Banner, error)
+	GetBannersByFilter(ctx context.Context, featureID int, tagID int, limit int, offset int) ([]*Banner, error)
 	UpdateBannerByID(ctx context.Context, banner *Banner) error
 	DeleteBannerByID(ctx context.Context, id int) error
 }

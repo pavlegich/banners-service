@@ -24,9 +24,23 @@ func NewBannerRepository(ctx context.Context, db *sql.DB) *Repository {
 	}
 }
 
-// GetBannerByFilter gets benner from the storage by the requested filters and returns it.
-func (r *Repository) GetBannerByFilter(ctx context.Context, name string, feature_id int, tag_id int) (*banner.Banner, error) {
-	return nil, nil
+// GetBannerContentByFilter gets and returns banner content from the storage by the requested filters.
+func (r *Repository) GetBannerContentByFilter(ctx context.Context, featureID int, tagID int) (*banner.Content, error) {
+	row := r.db.QueryRowContext(ctx, `SELECT content FROM banners WHERE feature_id = $1 AND $2 = ANY (tag_ids) 
+	ORDER BY updated_at DESC LIMIT 1`, featureID, tagID)
+
+	var bannerContent banner.Content
+	err := row.Scan(&bannerContent)
+	if err != nil {
+		return nil, fmt.Errorf("GetBannerContentByFilter: scan row failed %w", err)
+	}
+
+	err = row.Err()
+	if err != nil {
+		return nil, fmt.Errorf("GetBannerContentByFilter: row.Err() %w", err)
+	}
+
+	return &bannerContent, nil
 }
 
 // CreateBanner stores new banner into the storage.
@@ -49,16 +63,16 @@ func (r *Repository) CreateBanner(ctx context.Context, b *banner.Banner) (int, e
 }
 
 // GetBannersByFilter gets and returns the banners by filter from the storage.
-func (r *Repository) GetBannersByFilter(ctx context.Context, feature_id int, tag_id int, limit int, offset int) ([]*banner.Banner, error) {
+func (r *Repository) GetBannersByFilter(ctx context.Context, featureID int, tagID int, limit int, offset int) ([]*banner.Banner, error) {
 	query := "SELECT id, tag_ids, feature_id, content, is_active, created_at, updated_at FROM banners"
-	if feature_id != 0 || tag_id != 0 {
+	if featureID != 0 || tagID != 0 {
 		query += " WHERE"
-		if feature_id != 0 && tag_id == 0 {
-			query += fmt.Sprintf(" feature_id = %d", feature_id)
-		} else if feature_id == 0 && tag_id != 0 {
-			query += fmt.Sprintf(" %d = ANY (tag_ids)", tag_id)
+		if featureID != 0 && tagID == 0 {
+			query += fmt.Sprintf(" feature_id = %d", featureID)
+		} else if featureID == 0 && tagID != 0 {
+			query += fmt.Sprintf(" %d = ANY (tag_ids)", tagID)
 		} else {
-			query += fmt.Sprintf(" feature_id = %d AND %d = ANY (tag_ids)", feature_id, tag_id)
+			query += fmt.Sprintf(" feature_id = %d AND %d = ANY (tag_ids)", featureID, tagID)
 		}
 	}
 
