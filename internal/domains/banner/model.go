@@ -33,11 +33,19 @@ type Service interface {
 // Repository describes methods related with banners
 // for interaction with the storage.
 type Repository interface {
-	GetBannerContentByFilter(ctx context.Context, featureID int, tagID int) (*Content, error)
-	CreateBanner(ctx context.Context, banner *Banner) (int, error)
+	GetBannerByFilter(ctx context.Context, featureID int, tagID int) (*Banner, error)
+	CreateBanner(ctx context.Context, banner *Banner) (*Banner, error)
 	GetBannersByFilter(ctx context.Context, featureID int, tagID int, limit int, offset int) ([]*Banner, error)
-	UpdateBannerByID(ctx context.Context, banner *Banner) error
+	UpdateBanner(ctx context.Context, banner *Banner) (*Banner, error)
 	DeleteBannerByID(ctx context.Context, id int) error
+}
+
+// Cache describes methods realted with banners stored in cache.
+type Cache interface {
+	CreateBanner(ctx context.Context, banner *Banner) error
+	GetBannerContentByFilter(ctx context.Context, featureID int, tagID int) (*Content, error)
+	DeleteBanner(ctx context.Context, id int, featureID int, tagID int) error
+	GC(ctx context.Context)
 }
 
 // Content type for implementing the Scanner interface.

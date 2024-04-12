@@ -6,6 +6,9 @@ SERVER_BINARY_NAME = server
 SERVER_PACKAGE_PATH = ./cmd/server
 SERVER_ADDR = localhost:8080
 
+DEFAULT_EXPIRATION = 5m
+CLEANUP_INTERVAL = 10m
+
 # ====================
 # HELPERS
 # ====================
@@ -37,7 +40,7 @@ build-local:
 
 ## run-local: run the server locally
 run-local: build-local
-	/tmp/bin/$(SERVER_BINARY_NAME) -a=$(SERVER_ADDR) -d=$(DATABASE_DSN)
+	/tmp/bin/$(SERVER_BINARY_NAME) -a=$(SERVER_ADDR) -d=$(DATABASE_DSN) -clean=$(CLEANUP_INTERVAL) -exp=$(DEFAULT_EXPIRATION)
 
 ## build-docker: build the server with docker-compose
 build-docker:

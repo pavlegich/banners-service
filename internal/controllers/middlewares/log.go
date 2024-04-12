@@ -1,4 +1,4 @@
-// Package middlewares contains function for logging actions from the handlers.
+// Package middlewares contains function for logging, authorization check and recovery actions.
 package middlewares
 
 import (

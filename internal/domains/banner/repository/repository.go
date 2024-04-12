@@ -5,7 +5,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/lib/pq"
 	"github.com/pavlegich/banners-service/internal/domains/banner"
@@ -24,42 +26,55 @@ func NewBannerRepository(ctx context.Context, db *sql.DB) *Repository {
 	}
 }
 
-// GetBannerContentByFilter gets and returns banner content from the storage by the requested filters.
-func (r *Repository) GetBannerContentByFilter(ctx context.Context, featureID int, tagID int) (*banner.Content, error) {
-	row := r.db.QueryRowContext(ctx, `SELECT content FROM banners WHERE feature_id = $1 AND $2 = ANY (tag_ids) 
+// GetBannerByFilter: gets and returns banner content from the storage by the requested filters.
+func (r *Repository) GetBannerByFilter(ctx context.Context, featureID int, tagID int) (*banner.Banner, error) {
+	row := r.db.QueryRowContext(ctx, `SELECT id, tag_ids, feature_id, content, is_active, created_at, updated_at 
+	FROM banners WHERE feature_id = $1 AND $2 = ANY (tag_ids) AND is_active = true 
 	ORDER BY updated_at DESC LIMIT 1`, featureID, tagID)
 
-	var bannerContent banner.Content
-	err := row.Scan(&bannerContent)
+	var b banner.Banner
+	var tagIDs pq.Int64Array
+	err := row.Scan(&b.ID, &tagIDs, &b.FeatureID, &b.Content, &b.IsActive, &b.CreatedAt, &b.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("GetBannerContentByFilter: scan row failed %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("GetBannerByFilter: banner not found in database %w", errs.ErrBannerNotFound)
+		}
+		return nil, fmt.Errorf("GetBannerByFilter: scan row failed %w", err)
+	}
+	for _, v := range tagIDs {
+		b.TagIDs = append(b.TagIDs, int(v))
 	}
 
 	err = row.Err()
 	if err != nil {
-		return nil, fmt.Errorf("GetBannerContentByFilter: row.Err() %w", err)
+		return nil, fmt.Errorf("GetBannerByFilter:: row.Err() %w", err)
 	}
 
-	return &bannerContent, nil
+	return &b, nil
 }
 
 // CreateBanner stores new banner into the storage.
-func (r *Repository) CreateBanner(ctx context.Context, b *banner.Banner) (int, error) {
+func (r *Repository) CreateBanner(ctx context.Context, b *banner.Banner) (*banner.Banner, error) {
 	row := r.db.QueryRowContext(ctx, `INSERT INTO banners (tag_ids, feature_id, content, is_active) 
-	VALUES ($1, $2, $3, $4) RETURNING id`, b.TagIDs, b.FeatureID, b.Content, b.IsActive)
+	VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at`, b.TagIDs, b.FeatureID, b.Content, b.IsActive)
 
 	var id int
-	err := row.Scan(&id)
+	var createdAt, updatedAt time.Time
+	err := row.Scan(&id, &createdAt, &updatedAt)
 	if err != nil {
-		return -1, fmt.Errorf("CreateBanner: scan row failed %w", err)
+		return nil, fmt.Errorf("CreateBanner: scan row failed %w", err)
 	}
+
+	b.ID = id
+	b.CreatedAt = createdAt
+	b.UpdatedAt = updatedAt
 
 	err = row.Err()
 	if err != nil {
-		return -1, fmt.Errorf("CreateBanner: row.Err %w", err)
+		return nil, fmt.Errorf("CreateBanner: row.Err %w", err)
 	}
 
-	return id, nil
+	return b, nil
 }
 
 // GetBannersByFilter gets and returns the banners by filter from the storage.
@@ -75,6 +90,8 @@ func (r *Repository) GetBannersByFilter(ctx context.Context, featureID int, tagI
 			query += fmt.Sprintf(" feature_id = %d AND %d = ANY (tag_ids)", featureID, tagID)
 		}
 	}
+
+	query += " ORDER BY updated_at DESC"
 
 	if limit != 0 {
 		query += fmt.Sprintf(" LIMIT %d", limit)
@@ -109,24 +126,28 @@ func (r *Repository) GetBannersByFilter(ctx context.Context, featureID int, tagI
 	return bannersList, nil
 }
 
-// UpdateBannerByID updates requested banner in the storage.
-func (r *Repository) UpdateBannerByID(ctx context.Context, b *banner.Banner) error {
-	res, err := r.db.ExecContext(ctx, `UPDATE banners SET tag_ids = $1, feature_id = $2, content = $3, is_active = $4,
-	updated_at = NOW() WHERE id = $5`, b.TagIDs, b.FeatureID, b.Content, b.IsActive, b.ID)
+// UpdateBanner updates requested banner in the storage.
+func (r *Repository) UpdateBanner(ctx context.Context, b *banner.Banner) (*banner.Banner, error) {
+	row := r.db.QueryRowContext(ctx, `UPDATE banners SET tag_ids = $1, feature_id = $2, content = $3, is_active = $4,
+	updated_at = NOW() WHERE id = $5 RETURNING updated_at`, b.TagIDs, b.FeatureID, b.Content, b.IsActive, b.ID)
 
+	var updatedAt time.Time
+	err := row.Scan(&updatedAt)
 	if err != nil {
-		return fmt.Errorf("UpdateBannerByID: update data failed %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("UpdateBanner: nothing to update, %w", errs.ErrBannerNotFound)
+		}
+		return nil, fmt.Errorf("UpdateBanner: scan row failed %w", err)
 	}
 
-	rowsCount, err := res.RowsAffected()
+	b.UpdatedAt = updatedAt
+
+	err = row.Err()
 	if err != nil {
-		return fmt.Errorf("UpdateBannerByID: couldn't get rows affected %w", err)
-	}
-	if rowsCount == 0 {
-		return fmt.Errorf("UpdateBannerByID: nothing to update, %w", errs.ErrBannerNotFound)
+		return nil, fmt.Errorf("UpdateBanner: row.Err %w", err)
 	}
 
-	return nil
+	return b, nil
 }
 
 // DeleteBannerByID deletes the requested by ID banner from the storage.
