@@ -1,0 +1,269 @@
+{
+	"info": {
+		"_postman_id": "7af443ed-e6f3-460c-a894-90d8b41595d3",
+		"name": "banners-service",
+		"description": "Postman collection with request examples to banners-service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28853335"
+	},
+	"item": [
+		{
+			"name": "Post /banner",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"tag_ids\": [1, 2, 3],\n    \"feature_id\": 1,\n    \"content\": {\n        \"title\": \"some_title\",\n        \"text\": \"some_text\",\n        \"url\": \"some_url\"\n    },\n    \"is_active\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/banner",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"banner"
+					]
+				},
+				"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+			},
+			"response": []
+		},
+		{
+			"name": "Patch /banner",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"tag_ids\": [2, 4, 5],\n    \"feature_id\": 1,\n    \"content\": {\n        \"title\": \"some_title\",\n        \"text\": \"some_text\",\n        \"url\": \"some_url\"\n    },\n    \"is_active\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{host}}/banner/1",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"banner",
+						"1"
+					]
+				},
+				"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+			},
+			"response": []
+		},
+		{
+			"name": "Get /banner",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{host}}/banner?feature_id=1&tag_id=1",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"banner"
+					],
+					"query": [
+						{
+							"key": "feature_id",
+							"value": "1",
+							"description": "Идентификатор фичи"
+						},
+						{
+							"key": "limit",
+							"value": "1",
+							"description": "Лимит",
+							"disabled": true
+						},
+						{
+							"key": "offset",
+							"value": "1",
+							"description": "Оффсет",
+							"disabled": true
+						},
+						{
+							"key": "tag_id",
+							"value": "1"
+						}
+					]
+				},
+				"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+			},
+			"response": []
+		},
+		{
+			"name": "Get /user_banner",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "token",
+						"value": "user_token",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{host}}/user_banner?tag_id=4&use_last_revision=true&feature_id=1",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"user_banner"
+					],
+					"query": [
+						{
+							"key": "tag_id",
+							"value": "4",
+							"description": "Идентификатор тега"
+						},
+						{
+							"key": "use_last_revision",
+							"value": "true"
+						},
+						{
+							"key": "feature_id",
+							"value": "1"
+						}
+					]
+				},
+				"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete /banner",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "token",
+						"value": "admin_token",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{host}}/banner/1",
+					"host": [
+						"{{host}}"
+					],
+					"path": [
+						"banner",
+						"1"
+					]
+				},
+				"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
