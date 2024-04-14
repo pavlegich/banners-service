@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pavlegich/banners-service/internal/controllers/handlers"
+	"github.com/pavlegich/banners-service/internal/domains/banner/repository"
 	"github.com/pavlegich/banners-service/internal/infra/config"
 	"github.com/pavlegich/banners-service/internal/infra/database"
 	"github.com/pavlegich/banners-service/internal/infra/logger"
@@ -48,8 +50,19 @@ func Run() error {
 	}
 	defer db.Close()
 
+	// Storage
+	cache := repository.NewBannerCache(ctx, cfg.DefaultExpiration, cfg.CleanupInterval)
+	repo := repository.NewBannerRepository(ctx, db)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		cache.GarbageCollect(ctx)
+		wg.Done()
+	}()
+
 	// Router
-	ctrl := handlers.NewController(ctx, db, cfg)
+	ctrl := handlers.NewController(ctx, repo, cache, cfg)
 	mh, err := ctrl.BuildRoute(ctx)
 	if err != nil {
 		return fmt.Errorf("Run: build server route failed %w", err)
@@ -78,6 +91,8 @@ func Run() error {
 				logger.Log.Error("server shutdown failed",
 					zap.Error(err))
 			}
+
+			wg.Wait()
 		}
 	}()
 

@@ -12,10 +12,10 @@ import (
 
 // Cache contains data for cache object.
 type Cache struct {
+	sync.RWMutex
 	defaultExpiration time.Duration
 	cleanupInterval   time.Duration
 	banners           map[bannerKey]cacheBanner
-	mu                *sync.RWMutex
 }
 
 // cacheBanner contains data for store banner in cache.
@@ -36,14 +36,13 @@ func NewBannerCache(ctx context.Context, defaultExpiration time.Duration, cleanu
 		defaultExpiration: defaultExpiration,
 		cleanupInterval:   cleanupInterval,
 		banners:           make(map[bannerKey]cacheBanner, 0),
-		mu:                &sync.RWMutex{},
 	}
 }
 
-// GetBannerContentByFilter finds and returns requested banner content by filter.
-func (c *Cache) GetBannerContentByFilter(ctx context.Context, featureID int, tagID int) (*banner.Content, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+// GetBannerByFilter finds and returns requested banner content by filter.
+func (c *Cache) GetBannerByFilter(ctx context.Context, featureID int, tagID int) (*banner.Banner, error) {
+	c.RLock()
+	defer c.RUnlock()
 
 	key := bannerKey{
 		featureID: featureID,
@@ -52,24 +51,20 @@ func (c *Cache) GetBannerContentByFilter(ctx context.Context, featureID int, tag
 
 	cb, ok := c.banners[key]
 	if !ok {
-		return nil, fmt.Errorf("GetBannerContentByFilter: banners with requested tag not found %w", errs.ErrBannerInCacheNotFound)
+		return nil, fmt.Errorf("GetBannerByFilter: banners with requested tag not found %w", errs.ErrBannerInCacheNotFound)
 	}
 
 	if time.Now().After(cb.expires) {
-		return nil, fmt.Errorf("GetBannerContentByFilter: banner content usage expired %w", errs.ErrBannerExpired)
+		return nil, fmt.Errorf("GetBannerByFilter: banner content usage expired %w", errs.ErrBannerExpired)
 	}
 
-	if !cb.banner.IsActive {
-		return nil, fmt.Errorf("GetBannerContentByFilter: banner currently not active %w", errs.ErrBannerNotFound)
-	}
-
-	return cb.banner.Content, nil
+	return cb.banner, nil
 }
 
 // CreateBanner creates new banner in cache.
 func (c *Cache) CreateBanner(ctx context.Context, banner *banner.Banner) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Lock()
+	defer c.Unlock()
 
 	for _, tagID := range banner.TagIDs {
 		key := bannerKey{
@@ -88,8 +83,8 @@ func (c *Cache) CreateBanner(ctx context.Context, banner *banner.Banner) error {
 
 // DeleteBanner deletes banner from cache.
 func (c *Cache) DeleteBanner(ctx context.Context, id int, featureID int, tagID int) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Lock()
+	defer c.Unlock()
 
 	if id > 0 {
 		for k := range c.banners {
@@ -116,8 +111,8 @@ func (c *Cache) DeleteBanner(ctx context.Context, id int, featureID int, tagID i
 	return nil
 }
 
-// GC cleans banners cache by requested intervals.
-func (c *Cache) GC(ctx context.Context) {
+// GarbageCollect cleans banners cache with requested interval.
+func (c *Cache) GarbageCollect(ctx context.Context) {
 	ticker := time.NewTicker(c.cleanupInterval)
 
 	for {
@@ -129,7 +124,8 @@ func (c *Cache) GC(ctx context.Context) {
 				return
 			}
 
-			if keys := c.expiredKeys(); len(keys) != 0 {
+			keys := c.expiredKeys()
+			if len(keys) != 0 {
 				c.clearBanners(keys)
 			}
 
@@ -142,8 +138,8 @@ func (c *Cache) GC(ctx context.Context) {
 
 // expiredKeys returns list of expired keys.
 func (c *Cache) expiredKeys() (keys []bannerKey) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.RLock()
+	defer c.RUnlock()
 
 	for key, b := range c.banners {
 		if time.Now().After(b.expires) {
@@ -156,8 +152,8 @@ func (c *Cache) expiredKeys() (keys []bannerKey) {
 
 // clearBanners deletes expired keys.
 func (c *Cache) clearBanners(keys []bannerKey) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Lock()
+	defer c.Unlock()
 
 	for _, k := range keys {
 		delete(c.banners, k)

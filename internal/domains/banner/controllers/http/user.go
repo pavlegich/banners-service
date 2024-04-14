@@ -63,6 +63,17 @@ func (h *BannerHandler) HandleGetUserBanner(w http.ResponseWriter, r *http.Reque
 				return
 			}
 
+			if current < 1 {
+				logger.Log.Error("HandleGetUserBanner: unexpected query value",
+					zap.String("query_name", val),
+					zap.String("query_value", queries[val][0]))
+
+				w.WriteHeader(http.StatusBadRequest)
+				resp := utils.ParamToJSON("error", "unexpected query value")
+				w.Write(resp)
+				return
+			}
+
 			if val == "feature_id" {
 				want["feature_id"] = true
 				req.featureID = current
@@ -107,6 +118,11 @@ func (h *BannerHandler) HandleGetUserBanner(w http.ResponseWriter, r *http.Reque
 
 		if errors.Is(err, errs.ErrBannerNotFound) {
 			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if errors.Is(err, errs.ErrBannerNotAllowed) {
+			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 

@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS banners (
     feature_id integer NOT NULL,
     content jsonb,
     is_active boolean,
-    created_at timestamp DEFAULT NOW(),
-    updated_at timestamp DEFAULT NOW()
+    created_at timestamptz DEFAULT NOW(),
+    updated_at timestamptz DEFAULT NOW()
 );
 
 -- create indexes

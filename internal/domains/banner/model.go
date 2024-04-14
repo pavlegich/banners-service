@@ -32,6 +32,8 @@ type Service interface {
 
 // Repository describes methods related with banners
 // for interaction with the storage.
+//
+//go:generate mockgen -destination=../../mocks/mock_Repository.go -package=mocks github.com/pavlegich/banners-service/internal/domains/banner Repository
 type Repository interface {
 	GetBannerByFilter(ctx context.Context, featureID int, tagID int) (*Banner, error)
 	CreateBanner(ctx context.Context, banner *Banner) (*Banner, error)
@@ -41,11 +43,13 @@ type Repository interface {
 }
 
 // Cache describes methods realted with banners stored in cache.
+//
+//go:generate mockgen -destination=../../mocks/mock_Cache.go -package=mocks github.com/pavlegich/banners-service/internal/domains/banner Cache
 type Cache interface {
 	CreateBanner(ctx context.Context, banner *Banner) error
-	GetBannerContentByFilter(ctx context.Context, featureID int, tagID int) (*Content, error)
+	GetBannerByFilter(ctx context.Context, featureID int, tagID int) (*Banner, error)
 	DeleteBanner(ctx context.Context, id int, featureID int, tagID int) error
-	GC(ctx context.Context)
+	GarbageCollect(ctx context.Context)
 }
 
 // Content type for implementing the Scanner interface.

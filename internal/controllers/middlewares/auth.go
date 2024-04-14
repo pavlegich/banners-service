@@ -20,7 +20,7 @@ func WithAuth(h http.Handler) http.Handler {
 			role = "admin"
 		case "user_token":
 			role = "user"
-			if r.RequestURI != "/user_banner" {
+			if r.URL.Path != "/user_banner" {
 				logger.Log.Error("WithAuth: no permissions to access resource",
 					zap.String("role", role),
 					zap.String("uri", r.RequestURI))

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	errs "github.com/pavlegich/banners-service/internal/errors"
+	"github.com/pavlegich/banners-service/internal/utils"
 )
 
 // BannerService contains objects for banner service.
@@ -24,27 +25,31 @@ func NewBannerService(ctx context.Context, repo Repository, cache Cache) *Banner
 
 // Unload gets banner by filter and returns it.
 func (s *BannerService) Unload(ctx context.Context, featureID int, tagID int, lastRevision bool) (*Content, error) {
+	userRole, err := utils.GetUserRoleFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("Unload: get user role from context failed %w", err)
+	}
+
 	if !lastRevision {
-		bannerContent, err := s.cache.GetBannerContentByFilter(ctx, featureID, tagID)
-		if errors.Is(err, errs.ErrBannerExpired) {
-			err := s.cache.DeleteBanner(ctx, 0, featureID, tagID)
-			if err != nil {
-				return nil, fmt.Errorf("Unload: delete banner from cache failed %w", err)
-			}
+		banner, err := s.cache.GetBannerByFilter(ctx, featureID, tagID)
 
-		} else if errors.Is(err, errs.ErrBannerInCacheNotFound) {
-			banner, err := s.repo.GetBannerByFilter(ctx, featureID, tagID)
-			if err != nil {
-				return nil, fmt.Errorf("Unload: get actual user banner content failed %w", err)
+		if err != nil {
+			// If banner expired, delete banner from cache and get banner from the database
+			if errors.Is(err, errs.ErrBannerExpired) {
+				err := s.cache.DeleteBanner(ctx, 0, featureID, tagID)
+				if err != nil {
+					return nil, fmt.Errorf("Unload: delete banner from cache failed %w", err)
+				}
+				// If banner not found, get banner from the database
+			} else if !errors.Is(err, errs.ErrBannerInCacheNotFound) {
+				return nil, fmt.Errorf("Unload: get user banner content from cache failed %w", err)
 			}
-
+		} else { // If banner found, check whether the banner is active for user and return it
+			if !banner.IsActive && userRole == "user" {
+				return nil, fmt.Errorf("Unload: banner currently not active for users %w", errs.ErrBannerNotAllowed)
+			}
 			return banner.Content, nil
-
-		} else if err != nil {
-			return nil, fmt.Errorf("Unload: get user banner content from cache failed %w", err)
 		}
-
-		return bannerContent, nil
 	}
 
 	banner, err := s.repo.GetBannerByFilter(ctx, featureID, tagID)
@@ -52,6 +57,9 @@ func (s *BannerService) Unload(ctx context.Context, featureID int, tagID int, la
 		return nil, fmt.Errorf("Unload: get actual user banner content failed %w", err)
 	}
 
+	if !banner.IsActive && userRole == "user" {
+		return nil, fmt.Errorf("Unload: banner currently not active for users %w", errs.ErrBannerNotAllowed)
+	}
 	return banner.Content, nil
 }
 

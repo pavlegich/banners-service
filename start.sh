@@ -16,7 +16,7 @@ done
 >&2 echo "Postgres is up - executing command"
 
 # make migrations
-#goose -dir ./migrations up
+# goose -dir ./migrations up
 
 # run tests
 #go test -v ./...

@@ -4,11 +4,9 @@ package http
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/pavlegich/banners-service/internal/domains/banner"
-	repo "github.com/pavlegich/banners-service/internal/domains/banner/repository"
 	"github.com/pavlegich/banners-service/internal/infra/config"
 )
 
@@ -28,11 +26,8 @@ type BannerHandler struct {
 }
 
 // Activate activates handler for banner object.
-func Activate(ctx context.Context, r *chi.Mux, cfg *config.Config, db *sql.DB) {
-	storage := repo.NewBannerRepository(ctx, db)
-	cache := repo.NewBannerCache(ctx, cfg.DefaultExpiration, cfg.CleanupInterval)
-
-	s := banner.NewBannerService(ctx, storage, cache)
+func Activate(ctx context.Context, r *chi.Mux, cfg *config.Config, repo banner.Repository, cache banner.Cache) {
+	s := banner.NewBannerService(ctx, repo, cache)
 	newHandler(r, cfg, s)
 }
 

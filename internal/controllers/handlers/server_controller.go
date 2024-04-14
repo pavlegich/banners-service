@@ -4,11 +4,10 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
-	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/pavlegich/banners-service/internal/controllers/middlewares"
+	"github.com/pavlegich/banners-service/internal/domains/banner"
 	banners "github.com/pavlegich/banners-service/internal/domains/banner/controllers/http"
 	"github.com/pavlegich/banners-service/internal/infra/config"
 )
@@ -16,15 +15,17 @@ import (
 // Controller contains database and configuration
 // for building the server router.
 type Controller struct {
-	db  *sql.DB
-	cfg *config.Config
+	repo  banner.Repository
+	cache banner.Cache
+	cfg   *config.Config
 }
 
 // NewController creates and returns new server controller.
-func NewController(ctx context.Context, db *sql.DB, cfg *config.Config) *Controller {
+func NewController(ctx context.Context, repo banner.Repository, cache banner.Cache, cfg *config.Config) *Controller {
 	return &Controller{
-		db:  db,
-		cfg: cfg,
+		repo:  repo,
+		cache: cache,
+		cfg:   cfg,
 	}
 }
 
@@ -36,17 +37,7 @@ func (c *Controller) BuildRoute(ctx context.Context) (*chi.Mux, error) {
 	r.Use(middlewares.Recovery)
 	r.Use(middlewares.WithAuth)
 
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Hello, world!"))
-	})
-
-	banners.Activate(ctx, r, c.cfg, c.db)
+	banners.Activate(ctx, r, c.cfg, c.repo, c.cache)
 
 	return r, nil
 }
