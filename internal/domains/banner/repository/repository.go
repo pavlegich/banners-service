@@ -26,7 +26,7 @@ func NewBannerRepository(ctx context.Context, db *sql.DB) *Repository {
 	}
 }
 
-// GetBannerByFilter: gets and returns banner content from the storage by the requested filters.
+// GetBannerByFilter gets and returns banner content from the storage by the requested filters.
 func (r *Repository) GetBannerByFilter(ctx context.Context, featureID int, tagID int) (*banner.Banner, error) {
 	row := r.db.QueryRowContext(ctx, `SELECT id, tag_ids, feature_id, content, is_active, created_at, updated_at 
 	FROM banners WHERE feature_id = $1 AND $2 = ANY (tag_ids) AND is_active = true 
